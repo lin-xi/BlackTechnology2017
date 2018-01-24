@@ -1,1 +1,0 @@
-export function render() { return require("../../src/docs/Grid.vue") }

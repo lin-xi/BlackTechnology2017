@@ -1,0 +1,1 @@
+{"dependencies":[],"generated":{"js":"module.exports = [\n    {\n      \"groupName\": \"Grid\",\n      \"group\": [\n        {\n          \"path\": \"/doc/Grid\",\n          \"title\": \"CSS grid\",\n          \"name\": \"Grid\"\n        }\n      ]\n    }\n  ];"},"hash":"b6e30881c8282a03097923956d65f68d"}

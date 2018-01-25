@@ -37,11 +37,11 @@
     <table>
       <tr>
         <td>
-          <video width="480px" height="320px" ref="myVideo">
+          <video width="480px" height="320px" id="myVideo">
           </video>
         </td>
         <td>
-          <video width="480px" height="320px" ref="remoteVideo">
+          <video width="480px" height="320px" id="remoteVideo">
           </video>
         </td>
       </tr>
@@ -269,11 +269,11 @@ export default {
       }
 
       pc.onaddstream = function (evt) {
-        this.$refs.remoteVideo.src = window.URL.createObjectURL(evt.stream)
+        document.querySelector('#remoteVideo').src = window.URL.createObjectURL(evt.stream)
       }
 
       window.navigator.getUserMedia({ "audio": true, "video": true }, (stream) => {
-        this.$refs.myVideo.src = stream
+        document.querySelector('#myVideo').src = window.URL.createObjectURL(stream)
         pc.addStream(stream);
       }, this.onError)
 

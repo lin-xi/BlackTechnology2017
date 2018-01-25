@@ -32,91 +32,284 @@
 
 
     <h2>技术实现</h2>
-    
+
+    房间地址：<input class="roomUrl" readonly="true" v-model="roomUrl"/>
     <table>
       <tr>
         <td>
-          <video width="640px" height="360px" ref="myVideo">
+          <video width="480px" height="320px" ref="myVideo">
           </video>
         </td>
         <td>
-          <video width="640px" height="360px" ref="remoteVideo">
+          <video width="480px" height="320px" ref="remoteVideo">
           </video>
         </td>
       </tr>
     </table>
 
-    <p>
-      <button @click="swap">1和10互换</button> 
-    </p>
+    1. getUserMedia
+<pre>
+  <code>
+  let video = this.$refs.myVideo
+  window.navigator.getUserMedia({audio: false, video: true}, (stream) => {
+    localStream = stream
+    if (window.URL) {
+      video.src = window.URL.createObjectURL(stream)
+    } else {
+      video.src = stream
+    }
+    this.ice()
+
+  }, (error) => {
+    console.log(error)
+    alert(error.message)
+  })
+  </code>
+</pre>
+
+    2. 信令服务器，可以用socket.io实现，demo中用ScaleDrone提供的免费服务当服务器
+
+<pre>
+  <code>
+      socket = new ScaleDrone('OXo4HSBTCQ8ehrxI');
+
+      socket.on('open', (error) => {
+        if (error) { return console.error(error);}
+
+        let room = socket.subscribe(this.roomName);
+        room.on('open', function(error){
+            if (error) {onError(error);}
+        });
+
+        room.on('members', (members) => {
+          console.log('MEMBERS', members);
+          // 如果你是第二个链接到房间的人，就会创建offer
+          let isOffer = members.length === 2;
+          this.startWebRTC(isOffer);
+        })
+
+        // 从Scaledrone监听信令数据
+        room.on('data', (message, client) => {
+          //不处理自己发送消息
+          if (client.id === socket.clientId) {
+              return;
+          }
+
+          if (message.sdp) {
+            // 设置远程sdp, 在offer 或者 answer后
+            pc.setRemoteDescription(new RTCSessionDescription(message.sdp), () => {
+                // 当收到offer 后就接听
+              if (pc.remoteDescription.type === 'offer') {
+
+                  pc.createAnswer().then((answer) => {
+                    pc.setLocalDescription(answer, () => {
+                      this.sendMessage({ 'sdp': pc.localDescription });
+                    }, this.onError);
+                  }).catch(this.onError);
+              }
+            }, onError);
+          } else if (message.candidate) {
+            // 增加新的 ICE canidatet 到本地的链接中
+            pc.addIceCandidate(new RTCIceCandidate(message.candidate));
+          }
+        })
+
+      })
+  </code>
+</pre>
     
+    3. ICE
+
+<pre>
+  <code>
+      const iceServer = {
+        "iceServers": [{
+          urls: 'stun:stun.l.google.com:19302'
+        }]
+      }
+      pc = new RTCPeerConnection(iceServer)
+
+      pc.onicecandidate = (event) => {
+        if (event.candidate) {
+          console.log('>>>>onicecandidate')
+            this.sendMessage({ 'candidate': event.candidate });
+        }
+      }
+
+      if (isOffer) {
+        pc.onnegotiationneeded = () => {
+          // 创建本地sdp描述 (Session Description Protocol) 
+          pc.createOffer().then((sdp) => {
+            pc.setLocalDescription(sdp, () => {
+              this.sendMessage({'sdp': pc.localDescription });
+            }, this.onError);
+          }).catch(this.onError);
+        }
+      }
+
+      pc.onaddstream = function (evt) {
+        this.$refs.remoteVideo.src = window.URL.createObjectURL(evt.stream)
+      }
+
+      window.navigator.getUserMedia({ "audio": true, "video": true }, (stream) => {
+        this.$refs.myVideo.src = stream
+        pc.addStream(stream);
+      }, this.onError)
+  </code>
+</pre>
+
+    <h2>总结</h2>
+      1. 创建 RTCPeerConnection <br>
+      2. getUserMedia 获取流，RTCPeerConnection 添加流 <br>
+      3. 发起方，创建 offer， 设置本地描述，发送 SDP（Session Description Protocol）<br>
+      4. 接受方，接受 offer，设置远程描述，创建 answer, 设置本地描述，发送 SDP （Session Description Protocol）<br>
+      4. 发起方，接受offer，设置远程描述，创建 answer, 设置本地描述，发送 SDP （Session Description Protocol）<br>
+      5. 处理 onicecandidate， <br>
+      5. 处理 onicecandidate， <br>
+      6. 处理onaddstream <br>
+
+
   </div>
 </template>
 
 <script>
-let localStream;
-
-import io from 'socket.io-client';
+let socket;
+let pc;
 
 export default {
-  name: 'doc-grid',
+  name: 'doc-webRTC',
+  data () {
+    return {
+      roomUrl: '',
+      roomName: ''
+    }
+  },
   methods: {
-    swap () {
-      this.$refs.cell1.className = 'cell7'
-      this.$refs.cell7.className = 'cell1'
+    getUrlParam (name) {
+      var reg = new RegExp("(\\?|&)" + name + "=([^&]*)(&|$)");  
+      var r = window.location.href.substr(1).match(reg);  
+      if (r != null) return unescape(r[2]); return null;  
     },
 
-    ice () {
+    start () {
+      // const socket = io('http://localhost:9001');
+      socket = new ScaleDrone('OXo4HSBTCQ8ehrxI');
 
-      const socket = io('http://localhost:9001');
-      socket.on('message', function (data) {
-        // console.log(data);
-      });
+      socket.on('open', (error) => {
+        if (error) { return console.error(error);}
 
-      let iceServer = {
+        let room = socket.subscribe(this.roomName);
+        room.on('open', function(error){
+            if (error) {onError(error);}
+        });
+
+        room.on('members', (members) => {
+          console.log('MEMBERS', members);
+          // 如果你是第二个链接到房间的人，就会创建offer
+          let isOffer = members.length === 2;
+          this.startWebRTC(isOffer);
+        })
+
+        // 从Scaledrone监听信令数据
+        room.on('data', (message, client) => {
+          //不处理自己发送消息
+          if (client.id === socket.clientId) {
+              return;
+          }
+
+          if (message.sdp) {
+            // 设置远程sdp, 在offer 或者 answer后
+            console.log('sdp消息：', message)
+            pc.setRemoteDescription(new RTCSessionDescription(message.sdp), () => {
+                // 当收到offer 后就接听
+              console.log('sdp消息类型：', pc.remoteDescription.type)
+              if (pc.remoteDescription.type === 'offer') {
+                  pc.createAnswer().then((answer) => {
+                    pc.setLocalDescription(answer, () => {
+                      this.sendMessage({ 'sdp': pc.localDescription });
+                    }, this.onError);
+                  }).catch(this.onError);
+              }
+            }, onError);
+          } else if (message.candidate) {
+            console.log('candidate消息：', message)
+            // 增加新的 ICE canidatet 到本地的链接中
+            pc.addIceCandidate(new RTCIceCandidate(message.candidate));
+          }
+        })
+
+      })
+
+    },
+
+    startWebRTC (isOffer) {
+      const iceServer = {
         "iceServers": [{
-          "url": "stun:stunserver.org"
+          urls: 'stun:stun.l.google.com:19302'
         }]
       }
-      let pc = new RTCPeerConnection(iceServer)
-      pc.addStream(localStream)
+      pc = new RTCPeerConnection(iceServer)
 
-      pc.onicecandidate = function(event) {
+      pc.onicecandidate = (event) => {
         if (event.candidate) {
-          console.log(event.candidate)
-          socket.emit('candidate', event.candidate)
+          console.log('>>>>onicecandidate')
+            this.sendMessage({ 'candidate': event.candidate });
         }
       }
 
-      pc.oniceconnectionstatechange = function(event) {
-        console.log(event)
+      if (isOffer) {
+        pc.onnegotiationneeded = () => {
+          // 创建本地sdp描述 (Session Description Protocol) 
+          pc.createOffer().then((sdp) => {
+            pc.setLocalDescription(sdp, () => {
+              this.sendMessage({'sdp': pc.localDescription });
+            }, this.onError);
+          }).catch(this.onError);
+        }
       }
+
+      pc.onaddstream = function (evt) {
+        this.$refs.remoteVideo.src = window.URL.createObjectURL(evt.stream)
+      }
+
+      window.navigator.getUserMedia({ "audio": true, "video": true }, (stream) => {
+        this.$refs.myVideo.src = stream
+        pc.addStream(stream);
+      }, this.onError)
+
+    },
+
+    sendMessage (message) {
+      socket.publish({
+        room: this.roomName,
+        message
+      })
+    },
+
+    onError (error) {
+      console.log(error)
     }
     
   },
   mounted () {
     this.$nextTick( () => {
-
-      let video = this.$refs.myVideo
-      window.navigator.getUserMedia({audio: false, video: true}, (stream) => {
-        localStream = stream
-        if (window.URL) {
-          video.src = window.URL.createObjectURL(stream)
-        } else {
-          video.src = stream
-        }
-        this.ice()
-
-      }, (error) => {
-        console.log(error)
-        alert(error.message)
-      })
-
+      let roomName = this.getUrlParam('room')
+      if (!roomName) {
+        this.roomName = 'observable-' + Date.now()
+        this.roomUrl = location.href + `?room=${this.roomName}`
+      } else {
+        this.roomName = 'observable-' + roomName.split('-')[1]
+        this.roomUrl = location.href
+      }
+      this.start()
     })
   }
 }
 </script>
 
 <style lang="less">
-
+  .roomUrl{
+    height: 40px;
+    width: 70%;
+  }
 </style>

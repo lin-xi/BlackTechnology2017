@@ -25,7 +25,7 @@
   },
   "scripts": {
     "dev": "node build/dev.js",
-    "build": "rimraf ./dist/* && parcel build src/index.html"
+    "build": "rimraf ./dist/* && parcel build src/index.html --public-url ./"
   },
   "repository": {
     "type": "git",

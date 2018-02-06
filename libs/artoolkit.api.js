@@ -1203,8 +1203,10 @@
 				var device = devices.find(function(element) {
 					return element.label.indexOf('back') !== -1
 				})
-				alert(device.deviceId);
-				hdConstraints.video.deviceId = device ? {exact: device.deviceId} : undefined
+				if(device) {
+					alert(device.deviceId);
+					hdConstraints.video.deviceId = {exact: device.deviceId}
+				}
 				navigator.mediaDevices.getUserMedia(hdConstraints).
       	then(success).catch(onError);
 			})

@@ -22,7 +22,7 @@
       
       window.ARThreeOnLoad = function() {
 
-        ARController.getUserMediaThreeScene({maxARVideoSize: 320, cameraParam: './camera_para.dat', onSuccess: function(arScene, arController, arCamera) {
+        ARController.getUserMediaThreeScene({maxARVideoSize: 320, cameraParam: './libs/camera_para.dat', onSuccess: function(arScene, arController, arCamera) {
 
           document.body.className = arController.orientation;
           arController.setPatternDetectionMode(artoolkit.AR_MATRIX_CODE_DETECTION);

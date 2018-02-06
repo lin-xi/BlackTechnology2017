@@ -30,33 +30,11 @@
 			}
 			
 			if (window.ARController && ARController.getUserMediaThreeScene) {
-				ARThreeOnLoad()
-			}
-			
-			function ARThreeOnLoad() {
-				navigator
-					.mediaDevices
-					.enumerateDevices()
-					.then(function(devices) {
-						var device = devices.find(function(element) {
-							return element.label.indexOf('back') !== -1
-						})
-			
-						var videoParams = {deviceId: device ? {exact: device.deviceId} : undefined}
-						cameraSuccess(videoParams);
-					})
-					.catch(function(err) {
-						alert(err.name + ": " + err.message);
-					})
-			}
-			
-			function cameraSuccess(videoParams) {
 				ARController.getUserMediaThreeScene({
 					maxARVideoSize: 640,
 					cameraParam:    './libs/camera_para.dat',
-					facingMode: { exact: "environment" }, 
-					deviceId:   videoParams.deviceId,
-					onSuccess:      createAR
+					deviceId: videoParams.deviceId,
+					onSuccess: createAR
 				})
 			}
 			
@@ -117,10 +95,10 @@
 						height: 0.1
 					})
 			
-					var material = new THREE.MultiMaterial([
+					var material = [
 						new THREE.MeshBasicMaterial({color: 0xffa500}),
 						new THREE.MeshPhongMaterial({color: 0xffa500, shading: THREE.SmoothShading})
-					])
+					]
 			
 					// Red square for debugging
 					// var geometry = new THREE.PlaneGeometry(1, 1)

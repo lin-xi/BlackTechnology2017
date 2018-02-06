@@ -54,7 +54,8 @@
 				ARController.getUserMediaThreeScene({
 					maxARVideoSize: 640,
 					cameraParam:    './libs/camera_para.dat',
-					deviceId:       videoParams.deviceId,
+					facingMode: { exact: "environment" }, 
+					deviceId:   videoParams.deviceId,
 					onSuccess:      createAR
 				})
 			}

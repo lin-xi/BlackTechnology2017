@@ -23,6 +23,7 @@
       window.ARThreeOnLoad = function() {
         navigator.mediaDevices.enumerateDevices()
         .then(function(devices) {
+          alert(JSON.stringify(devices))
           var device = devices.find(function(element) {
             return element.label.indexOf('back') !== -1
           })
@@ -32,7 +33,6 @@
 						alert(err.name + ": " + err.message);
         })
       }
-
 
       function cameraSuccess(videoParams) {
         ARController.getUserMediaThreeScene({maxARVideoSize: 320, 	deviceId: videoParams.deviceId, cameraParam: './libs/camera_para.dat', onSuccess: function(arScene, arController, arCamera) {

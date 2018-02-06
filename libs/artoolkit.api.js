@@ -1190,7 +1190,6 @@
 			}
 		}
 
-		constraints.deviceId = configuration.deviceId ? configuration.deviceId : undefined;
 		mediaDevicesConstraints.facingMode = facing;
 
 		navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
@@ -1199,33 +1198,15 @@
 			video: constraints
 		};
 
-		if ( navigator.mediaDevices || window.MediaStreamTrack) {
-			if (navigator.mediaDevices) {
-				alert(JSON.stringify(hdConstraints));
-				navigator.mediaDevices.getUserMedia(hdConstraints).then(success, onError);
-			} else {
-				// MediaStreamTrack.getSources(function(sources) {
-				// 	var facingDir = mediaDevicesConstraints.facingMode;
-				// 	if (facing && facing.exact) {
-				// 		facingDir = facing.exact;
-				// 	}
-				// 	for (var i=0; i<sources.length; i++) {
-				// 		if (sources[i].kind === 'video' && sources[i].facing === facingDir) {
-				// 			hdConstraints.video.deviceId = sources[i].id;
-				// 			break;
-				// 		}
-				// 	}
-				// 	if (facing && facing.exact && !hdConstraints.video.optional.sourceId) {
-				// 		onError('Failed to get camera facing the wanted direction');
-				// 	} else {
-				// 		if (navigator.getUserMedia) {
-				// 			navigator.getUserMedia(hdConstraints, success, onError);
-				// 		} else {
-				// 			onError('navigator.getUserMedia is not supported on your browser');
-				// 		}
-				// 	}
-				// });
-			}
+		if ( navigator.mediaDevices) {
+			navigator.mediaDevices.enumerateDevices().then(function(devices) {
+				var device = devices.find(function(element) {
+					return element.label.indexOf('back') !== -1
+				})
+				hdConstraints.video.deviceId = device ? {exact: device.deviceId} : undefined
+				navigator.mediaDevices.getUserMedia(hdConstraints).
+      	then(success).catch(onError);
+			})
 		} else {
 			if (navigator.getUserMedia) {
 				navigator.getUserMedia(hdConstraints, success, onError);

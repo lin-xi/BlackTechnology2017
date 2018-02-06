@@ -23,7 +23,6 @@
       window.ARThreeOnLoad = function() {
         navigator.mediaDevices.enumerateDevices()
         .then(function(devices) {
-          alert(JSON.stringify(devices))
           var device = devices.find(function(element) {
             return element.label.indexOf('back') !== -1
           })
@@ -35,7 +34,8 @@
       }
 
       function cameraSuccess(videoParams) {
-        ARController.getUserMediaThreeScene({maxARVideoSize: 320, 	deviceId: videoParams.deviceId, cameraParam: './libs/camera_para.dat', onSuccess: function(arScene, arController, arCamera) {
+        alert(JSON.stringify(videoParams))
+        ARController.getUserMediaThreeScene({maxARVideoSize: 320, facingMode: {exact: "environment"},	deviceId: videoParams.deviceId, cameraParam: './libs/camera_para.dat', onSuccess: function(arScene, arController, arCamera) {
 
           document.body.className = arController.orientation;
           arController.setPatternDetectionMode(artoolkit.AR_MATRIX_CODE_DETECTION);

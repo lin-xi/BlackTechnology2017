@@ -21,8 +21,21 @@
     <script type="text/javascript">
       
       window.ARThreeOnLoad = function() {
+        navigator.mediaDevices.enumerateDevices()
+        .then(function(devices) {
+          var device = devices.find(function(element) {
+            return element.label.indexOf('back') !== -1
+          })
+          var videoParams = {deviceId: device ? {exact: device.deviceId} : undefined}
+          cameraSuccess(videoParams);
+        }).catch(function(err) {
+						alert(err.name + ": " + err.message);
+        })
+      }
 
-        ARController.getUserMediaThreeScene({maxARVideoSize: 320, cameraParam: './libs/camera_para.dat', onSuccess: function(arScene, arController, arCamera) {
+
+      function cameraSuccess(videoParams) {
+        ARController.getUserMediaThreeScene({maxARVideoSize: 320, 	deviceId: videoParams.deviceId, cameraParam: './libs/camera_para.dat', onSuccess: function(arScene, arController, arCamera) {
 
           document.body.className = arController.orientation;
           arController.setPatternDetectionMode(artoolkit.AR_MATRIX_CODE_DETECTION);

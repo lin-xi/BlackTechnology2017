@@ -1190,45 +1190,41 @@
 			}
 		}
 
+		constraints.deviceId = configuration.deviceId ? configuration.deviceId : undefined;
 		mediaDevicesConstraints.facingMode = facing;
 
 		navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
 		var hdConstraints = {
 			audio: false,
-			video: {
-				mandatory: constraints
-		  	}
+			video: constraints
 		};
 
-		if ( false ) {
-		// if ( navigator.mediaDevices || window.MediaStreamTrack) {
+		if ( navigator.mediaDevices || window.MediaStreamTrack) {
 			if (navigator.mediaDevices) {
-				navigator.mediaDevices.getUserMedia({
-					audio: false,
-					video: mediaDevicesConstraints
-				}).then(success, onError);
+				alert(JSON.stringify(hdConstraints));
+				navigator.mediaDevices.getUserMedia(hdConstraints).then(success, onError);
 			} else {
-				MediaStreamTrack.getSources(function(sources) {
-					var facingDir = mediaDevicesConstraints.facingMode;
-					if (facing && facing.exact) {
-						facingDir = facing.exact;
-					}
-					for (var i=0; i<sources.length; i++) {
-						if (sources[i].kind === 'video' && sources[i].facing === facingDir) {
-							hdConstraints.video.mandatory.sourceId = sources[i].id;
-							break;
-						}
-					}
-					if (facing && facing.exact && !hdConstraints.video.mandatory.sourceId) {
-						onError('Failed to get camera facing the wanted direction');
-					} else {
-						if (navigator.getUserMedia) {
-							navigator.getUserMedia(hdConstraints, success, onError);
-						} else {
-							onError('navigator.getUserMedia is not supported on your browser');
-						}
-					}
-				});
+				// MediaStreamTrack.getSources(function(sources) {
+				// 	var facingDir = mediaDevicesConstraints.facingMode;
+				// 	if (facing && facing.exact) {
+				// 		facingDir = facing.exact;
+				// 	}
+				// 	for (var i=0; i<sources.length; i++) {
+				// 		if (sources[i].kind === 'video' && sources[i].facing === facingDir) {
+				// 			hdConstraints.video.deviceId = sources[i].id;
+				// 			break;
+				// 		}
+				// 	}
+				// 	if (facing && facing.exact && !hdConstraints.video.optional.sourceId) {
+				// 		onError('Failed to get camera facing the wanted direction');
+				// 	} else {
+				// 		if (navigator.getUserMedia) {
+				// 			navigator.getUserMedia(hdConstraints, success, onError);
+				// 		} else {
+				// 			onError('navigator.getUserMedia is not supported on your browser');
+				// 		}
+				// 	}
+				// });
 			}
 		} else {
 			if (navigator.getUserMedia) {

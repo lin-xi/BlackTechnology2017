@@ -24,7 +24,7 @@
         ARController.getUserMediaThreeScene({maxARVideoSize: 320, cameraParam: './libs/camera_para.dat', onSuccess: function(arScene, arController, arCamera) {
           document.body.className = arController.orientation;
           arController.setPatternDetectionMode(artoolkit.AR_MATRIX_CODE_DETECTION);
-
+          alert(arController.orientation)
           var renderer = new THREE.WebGLRenderer({antialias: true});
           if (arController.orientation === 'portrait') {
             var w = (window.innerWidth / arController.videoHeight) * arController.videoWidth;
